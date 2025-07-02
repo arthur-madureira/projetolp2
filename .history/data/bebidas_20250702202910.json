@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "nome": "Coca-Cola",
+    "preco": 5.0,
+    "tamanho": 500
+  },
+  {
+    "id": 2,
+    "nome": "Guaraná Antarctica",
+    "preco": 4.5,
+    "tamanho": 350
+  },
+  {
+    "id": 3,
+    "nome": "Água Mineral",
+    "preco": 2.0,
+    "tamanho": 500
+  }
+]
