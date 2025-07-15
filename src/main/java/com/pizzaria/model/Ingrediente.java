@@ -1,12 +1,16 @@
 package com.pizzaria.model;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * Classe que representa um ingrediente usado nas pizzas
  */
 public class Ingrediente {
+    @Expose
     private int id;
+    @Expose
     private String nome;
-    private double precoAdicional;
+    @Expose
     private int quantidadeEmEstoque;
 
     // Construtor padrão
@@ -14,10 +18,9 @@ public class Ingrediente {
     }
 
     // Construtor com parâmetros
-    public Ingrediente(int id, String nome, double precoAdicional, int quantidadeEmEstoque) {
+    public Ingrediente(int id, String nome, int quantidadeEmEstoque) {
         this.id = id;
         this.nome = nome;
-        this.precoAdicional = precoAdicional;
         this.quantidadeEmEstoque = quantidadeEmEstoque;
     }
 
@@ -36,14 +39,6 @@ public class Ingrediente {
 
     public void setNome(String nome) {
         this.nome = nome;
-    }
-
-    public double getPrecoAdicional() {
-        return precoAdicional;
-    }
-
-    public void setPrecoAdicional(double precoAdicional) {
-        this.precoAdicional = precoAdicional;
     }
 
     public int getQuantidadeEmEstoque() {
@@ -73,8 +68,8 @@ public class Ingrediente {
 
     @Override
     public String toString() {
-        return String.format("Ingrediente{id=%d, nome='%s', precoAdicional=R$%.2f, estoque=%d}", 
-                           id, nome, precoAdicional, quantidadeEmEstoque);
+        return String.format("Ingrediente{id=%d, nome='%s', estoque=%d}", 
+                           id, nome, quantidadeEmEstoque);
     }
 
     @Override

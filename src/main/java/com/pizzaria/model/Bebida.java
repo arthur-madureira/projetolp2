@@ -1,11 +1,15 @@
 package com.pizzaria.model;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * Classe que representa uma bebida do cardápio
  * Herda de ItemCardapio e implementa o cálculo de preço
  */
 public class Bebida extends ItemCardapio {
+    @Expose
     private double precoFixo;
+    @Expose
     private int volumeEmML;
 
     // Construtor padrão

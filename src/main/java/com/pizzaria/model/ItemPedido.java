@@ -1,12 +1,17 @@
 package com.pizzaria.model;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * Classe associativa que liga um Pedido a um ItemCardapio
  * Permite definir a quantidade de cada item no pedido
  */
 public class ItemPedido {
+    @Expose
     private ItemCardapio item;
+    @Expose
     private int quantidade;
+    @Expose
     private double precoUnitario;
 
     // Construtor padrão

@@ -46,7 +46,8 @@ public class PedidoService {
         pedido.calcularValorTotal();
         
         pedidos.add(pedido);
-        cliente.adicionarPedido(pedido);
+        // Remover a adição do pedido ao cliente para evitar referência circular
+        // cliente.adicionarPedido(pedido);
         
         salvarDados();
         return pedido;
@@ -64,7 +65,8 @@ public class PedidoService {
         pedido.calcularValorTotal();
         
         pedidos.add(pedido);
-        cliente.adicionarPedido(pedido);
+        // Remover a adição do pedido ao cliente para evitar referência circular
+        // cliente.adicionarPedido(pedido);
         
         salvarDados();
         return pedido;
@@ -92,7 +94,7 @@ public class PedidoService {
      */
     public List<Pedido> listarPorCliente(Cliente cliente) {
         return pedidos.stream()
-                     .filter(p -> p.getCliente().getId() == cliente.getId())
+                     .filter(p -> p.getClienteId() == cliente.getId())
                      .toList();
     }
 
@@ -277,9 +279,29 @@ public class PedidoService {
      */
     private void validarTransicaoStatus(StatusPedido statusAtual, StatusPedido novoStatus) 
             throws PedidoInvalidoException {
+        // Não permite alterar pedidos já concluídos ou cancelados
+        if (statusAtual == StatusPedido.CONCLUIDO || statusAtual == StatusPedido.CANCELADO) {
+            throw new PedidoInvalidoException(
+                String.format("Não é possível alterar pedido %s", statusAtual)
+            );
+        }
+        
+        // Não permite retroceder para PENDENTE
+        if (novoStatus == StatusPedido.PENDENTE && statusAtual != StatusPedido.PENDENTE) {
+            throw new PedidoInvalidoException(
+                "Não é possível retroceder para status PENDENTE"
+            );
+        }
+        
+        // Permite todas as outras transições válidas
         boolean transicaoValida = switch (statusAtual) {
-            case PENDENTE -> novoStatus == StatusPedido.EM_PREPARO || novoStatus == StatusPedido.CANCELADO;
-            case EM_PREPARO -> novoStatus == StatusPedido.SAIU_PARA_ENTREGA || novoStatus == StatusPedido.CONCLUIDO;
+            case PENDENTE -> novoStatus == StatusPedido.EM_PREPARO || 
+                           novoStatus == StatusPedido.SAIU_PARA_ENTREGA || 
+                           novoStatus == StatusPedido.CONCLUIDO || 
+                           novoStatus == StatusPedido.CANCELADO;
+            case EM_PREPARO -> novoStatus == StatusPedido.SAIU_PARA_ENTREGA || 
+                             novoStatus == StatusPedido.CONCLUIDO || 
+                             novoStatus == StatusPedido.CANCELADO;
             case SAIU_PARA_ENTREGA -> novoStatus == StatusPedido.CONCLUIDO;
             case CONCLUIDO, CANCELADO -> false; // Estados finais
         };
@@ -298,6 +320,16 @@ public class PedidoService {
         try {
             Type listType = new TypeToken<List<Pedido>>(){}.getType();
             pedidos = JsonPersistence.loadFromFile(PEDIDOS_FILE, listType);
+            
+            // Reconstroi as referências dos clientes
+            for (Pedido pedido : pedidos) {
+                try {
+                    Cliente cliente = clienteService.buscarPorId(pedido.getClienteId());
+                    pedido.setCliente(cliente);
+                } catch (ClienteNaoEncontradoException e) {
+                    System.err.println("Cliente não encontrado para pedido " + pedido.getId() + ": " + e.getMessage());
+                }
+            }
             
             proximoId = pedidos.stream()
                               .mapToInt(Pedido::getId)

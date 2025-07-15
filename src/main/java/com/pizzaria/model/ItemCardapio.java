@@ -1,12 +1,17 @@
 package com.pizzaria.model;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * Classe abstrata que representa um item do cardápio
  * Serve como classe base para Pizza e Bebida
  */
 public abstract class ItemCardapio {
+    @Expose
     protected int id;
+    @Expose
     protected String nome;
+    @Expose
     protected String descricao;
 
     // Construtor padrão

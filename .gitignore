@@ -85,3 +85,4 @@ data/*.json
 # Temporary files
 *.tmp
 *.temp
+.history/

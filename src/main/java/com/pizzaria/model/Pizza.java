@@ -1,5 +1,6 @@
 package com.pizzaria.model;
 
+import com.google.gson.annotations.Expose;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,8 +9,11 @@ import java.util.List;
  * Herda de ItemCardapio e implementa o cálculo de preço
  */
 public class Pizza extends ItemCardapio {
+    @Expose
     private double precoBase;
+    @Expose
     private Tamanho tamanho;
+    @Expose
     private List<Ingrediente> ingredientes;
 
     // Construtor padrão
@@ -73,21 +77,25 @@ public class Pizza extends ItemCardapio {
     }
 
     /**
-     * Calcula o preço da pizza baseado no preço base, tamanho e ingredientes
+     * Calcula o preço da pizza baseado no preço base e tamanho
      * @return o preço total da pizza
      */
     @Override
     public double calcularPreco() {
-        double precoIngredientes = ingredientes.stream()
-                                             .mapToDouble(Ingrediente::getPrecoAdicional)
-                                             .sum();
-        
-        return (precoBase + precoIngredientes) * tamanho.getMultiplicador();
+        return precoBase * tamanho.getMultiplicador();
     }
 
     @Override
     public String toString() {
-        return String.format("Pizza{id=%d, nome='%s', tamanho=%s, precoBase=R$%.2f, ingredientes=%d, precoTotal=R$%.2f}", 
-                           id, nome, tamanho, precoBase, ingredientes.size(), calcularPreco());
+        double precoP = precoBase * Tamanho.PEQUENA.getMultiplicador();
+        double precoM = precoBase * Tamanho.MEDIA.getMultiplicador();
+        double precoG = precoBase * Tamanho.GRANDE.getMultiplicador();
+        
+        return String.format("Pizza{id=%d, nome='%s', ingredientes=%d}%n" +
+                           "Preços: P=R$%.2f | M=R$%.2f | G=R$%.2f%n" +
+                           "Ingredientes: %s", 
+                           id, nome, ingredientes.size(), 
+                           precoP, precoM, precoG,
+                           ingredientes.stream().map(Ingrediente::getNome).toList());
     }
 }

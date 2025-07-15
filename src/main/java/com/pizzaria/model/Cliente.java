@@ -1,5 +1,6 @@
 package com.pizzaria.model;
 
+import com.google.gson.annotations.Expose;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,11 +8,16 @@ import java.util.List;
  * Classe que representa um cliente da pizzaria
  */
 public class Cliente {
+    @Expose
     private int id;
+    @Expose
     private String nome;
+    @Expose
     private String telefone;
+    @Expose
     private Endereco endereco;
-    private List<Pedido> pedidos;
+    // Não incluir pedidos na serialização para evitar referência circular
+    private transient List<Pedido> pedidos;
 
     // Construtor padrão
     public Cliente() {
@@ -60,19 +66,37 @@ public class Cliente {
         this.endereco = endereco;
     }
 
+    /**
+     * Obtém os pedidos do cliente.
+     * Nota: Como pedidos é transient, esta lista estará sempre vazia após desserialização.
+     * Use PedidoService.listarPorCliente(cliente) para obter os pedidos do cliente.
+     */
     public List<Pedido> getPedidos() {
         return new ArrayList<>(pedidos);
     }
 
+    /**
+     * Define os pedidos do cliente.
+     * Nota: Este método é usado apenas para manter compatibilidade com o código legado.
+     * A relação cliente-pedido é mantida através do clienteId nos pedidos.
+     */
     public void setPedidos(List<Pedido> pedidos) {
         this.pedidos = new ArrayList<>(pedidos);
     }
 
     // Métodos de negócio
+    /**
+     * Adiciona um pedido à lista local do cliente.
+     * Nota: Este método não persiste a relação. Use PedidoService para criar pedidos.
+     */
     public void adicionarPedido(Pedido pedido) {
         this.pedidos.add(pedido);
     }
 
+    /**
+     * Remove um pedido da lista local do cliente.
+     * Nota: Este método não remove da persistência. Use PedidoService para gerenciar pedidos.
+     */
     public void removerPedido(Pedido pedido) {
         this.pedidos.remove(pedido);
     }

@@ -1,5 +1,6 @@
 package com.pizzaria.model;
 
+import com.google.gson.annotations.Expose;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,12 +10,20 @@ import java.util.List;
  * É a entidade central do sistema
  */
 public class Pedido {
+    @Expose
     private int id;
-    private Cliente cliente;
+    @Expose
+    private int clienteId; // Usar apenas o ID do cliente para evitar referência circular
+    private transient Cliente cliente; // Não serializar o objeto cliente completo
+    @Expose
     private List<ItemPedido> itensDoPedido;
+    @Expose
     private double valorTotal;
+    @Expose
     private StatusPedido status;
+    @Expose
     private LocalDateTime dataHora;
+    @Expose
     private Endereco enderecoEntrega;
 
     // Construtor padrão
@@ -29,6 +38,7 @@ public class Pedido {
     public Pedido(int id, Cliente cliente) {
         this.id = id;
         this.cliente = cliente;
+        this.clienteId = cliente.getId();
         this.itensDoPedido = new ArrayList<>();
         this.dataHora = LocalDateTime.now();
         this.status = StatusPedido.PENDENTE;
@@ -40,6 +50,7 @@ public class Pedido {
     public Pedido(int id, Cliente cliente, Endereco enderecoEntrega) {
         this.id = id;
         this.cliente = cliente;
+        this.clienteId = cliente.getId();
         this.itensDoPedido = new ArrayList<>();
         this.dataHora = LocalDateTime.now();
         this.status = StatusPedido.PENDENTE;
@@ -62,6 +73,15 @@ public class Pedido {
 
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
+        this.clienteId = cliente != null ? cliente.getId() : 0;
+    }
+
+    public int getClienteId() {
+        return clienteId;
+    }
+
+    public void setClienteId(int clienteId) {
+        this.clienteId = clienteId;
     }
 
     public List<ItemPedido> getItensDoPedido() {

@@ -3,6 +3,7 @@ package com.pizzaria.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.pizzaria.model.ItemCardapio;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -16,6 +17,8 @@ import java.util.List;
 public class JsonPersistence {
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .registerTypeAdapter(ItemCardapio.class, new ItemCardapioAdapter())
+            .excludeFieldsWithoutExposeAnnotation()
             .setPrettyPrinting()
             .create();
 

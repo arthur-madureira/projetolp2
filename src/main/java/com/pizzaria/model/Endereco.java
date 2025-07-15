@@ -1,13 +1,20 @@
 package com.pizzaria.model;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * Classe que representa o endereço de um cliente para entregas
  */
 public class Endereco {
+    @Expose
     private String logradouro;
+    @Expose
     private String numero;
+    @Expose
     private String bairro;
+    @Expose
     private String cidade;
+    @Expose
     private String cep;
 
     // Construtor padrão

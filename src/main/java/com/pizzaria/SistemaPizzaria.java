@@ -59,14 +59,14 @@ public class SistemaPizzaria {
         }
 
         // Criar ingredientes
-        ingredienteService.criarIngrediente(new Ingrediente(0, "Mussarela", 2.00, 50));
-        ingredienteService.criarIngrediente(new Ingrediente(0, "Presunto", 3.00, 30));
-        ingredienteService.criarIngrediente(new Ingrediente(0, "Bacon", 4.00, 20));
-        ingredienteService.criarIngrediente(new Ingrediente(0, "Catupiry", 3.50, 25));
-        ingredienteService.criarIngrediente(new Ingrediente(0, "Calabresa", 3.00, 40));
-        ingredienteService.criarIngrediente(new Ingrediente(0, "Cebola", 1.00, 60));
-        ingredienteService.criarIngrediente(new Ingrediente(0, "Tomate", 1.50, 45));
-        ingredienteService.criarIngrediente(new Ingrediente(0, "Azeitona", 2.50, 35));
+        ingredienteService.criarIngrediente(new Ingrediente(0, "Mussarela", 50));
+        ingredienteService.criarIngrediente(new Ingrediente(0, "Presunto", 30));
+        ingredienteService.criarIngrediente(new Ingrediente(0, "Bacon", 20));
+        ingredienteService.criarIngrediente(new Ingrediente(0, "Catupiry", 25));
+        ingredienteService.criarIngrediente(new Ingrediente(0, "Calabresa", 40));
+        ingredienteService.criarIngrediente(new Ingrediente(0, "Cebola", 60));
+        ingredienteService.criarIngrediente(new Ingrediente(0, "Tomate", 45));
+        ingredienteService.criarIngrediente(new Ingrediente(0, "Azeitona", 35));
 
         // Criar bebidas
         cardapioService.criarBebida(new Bebida(0, "Coca-Cola 350ml", "Refrigerante de cola", 4.50, 350));
@@ -203,25 +203,31 @@ public class SistemaPizzaria {
     }
 
     private void menuPedidos() {
-        System.out.println("\n=== GERENCIAR PEDIDOS ===");
-        System.out.println("1. Listar pedidos pendentes");
-        System.out.println("2. Listar pedidos em preparo");
-        System.out.println("3. Atualizar status do pedido");
-        System.out.println("4. Listar pedidos do dia");
-        System.out.print("Escolha uma opção: ");
-        
-        int opcao = lerOpcao();
-        
-        try {
-            switch (opcao) {
-                case 1 -> listarPedidosPendentes();
-                case 2 -> listarPedidosEmPreparo();
-                case 3 -> atualizarStatusPedido();
-                case 4 -> listarPedidosDoDia();
-                default -> System.out.println("Opção inválida!");
+        while (true) {
+            System.out.println("\n=== GERENCIAR PEDIDOS ===");
+            System.out.println("1. Criar novo pedido");
+            System.out.println("2. Listar pedidos pendentes");
+            System.out.println("3. Listar pedidos em preparo");
+            System.out.println("4. Atualizar status do pedido");
+            System.out.println("5. Listar pedidos do dia");
+            System.out.println("0. Voltar ao menu principal");
+            System.out.print("Escolha uma opção: ");
+            
+            int opcao = lerOpcao();
+            
+            try {
+                switch (opcao) {
+                    case 1 -> criarNovoPedido();
+                    case 2 -> listarPedidosPendentes();
+                    case 3 -> listarPedidosEmPreparo();
+                    case 4 -> atualizarStatusPedido();
+                    case 5 -> listarPedidosDoDia();
+                    case 0 -> { return; }
+                    default -> System.out.println("Opção inválida!");
+                }
+            } catch (Exception e) {
+                System.err.println("Erro: " + e.getMessage());
             }
-        } catch (Exception e) {
-            System.err.println("Erro: " + e.getMessage());
         }
     }
 
@@ -322,9 +328,6 @@ public class SistemaPizzaria {
         System.out.println("\n=== PIZZAS DO CARDÁPIO ===");
         for (Pizza pizza : pizzas) {
             System.out.println(pizza);
-            System.out.println("Ingredientes: " + pizza.getIngredientes().stream()
-                                                    .map(Ingrediente::getNome)
-                                                    .toList());
             System.out.println();
         }
     }
@@ -496,6 +499,313 @@ public class SistemaPizzaria {
             System.err.println("Erro na demonstração: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void criarNovoPedido() {
+        try {
+            System.out.println("\n=== CRIAR NOVO PEDIDO ===");
+            
+            // 1. Buscar ou cadastrar cliente
+            Cliente cliente = buscarOuCadastrarCliente();
+            if (cliente == null) {
+                System.out.println("Operação cancelada.");
+                return;
+            }
+            
+            // 2. Escolher tipo de pedido
+            System.out.println("\nTipo de pedido:");
+            System.out.println("1. Balcão");
+            System.out.println("2. Delivery");
+            System.out.print("Escolha: ");
+            int tipoPedido = lerOpcao();
+            
+            Endereco enderecoEntrega = null;
+            if (tipoPedido == 2) {
+                enderecoEntrega = obterEnderecoEntrega(cliente);
+            }
+            
+            // 3. Montar o pedido
+            List<ItemPedido> itens = montarItensPedido();
+            if (itens.isEmpty()) {
+                System.out.println("Pedido cancelado - nenhum item adicionado.");
+                return;
+            }
+            
+            // 4. Criar o pedido
+            Pedido pedido;
+            if (tipoPedido == 1) {
+                pedido = pedidoService.criarPedido(cliente, itens);
+            } else {
+                pedido = pedidoService.criarPedidoDelivery(cliente, itens, enderecoEntrega);
+            }
+            
+            // 5. Mostrar resumo e confirmar
+            mostrarResumoPedido(pedido, cliente, tipoPedido, enderecoEntrega);
+            
+        } catch (Exception e) {
+            System.out.println("Erro ao criar pedido: " + e.getMessage());
+        }
+    }
+
+    private Cliente buscarOuCadastrarCliente() {
+        System.out.print("Digite o telefone do cliente: ");
+        String telefone = scanner.nextLine();
+        
+        try {
+            Cliente cliente = clienteService.buscarPorTelefone(telefone);
+            System.out.println("Cliente encontrado: " + cliente.getNome());
+            return cliente;
+        } catch (ClienteNaoEncontradoException e) {
+            System.out.print("Cliente não encontrado. Deseja cadastrar um novo cliente? (s/n): ");
+            String opcao = scanner.nextLine();
+            
+            if (opcao.equalsIgnoreCase("s")) {
+                return cadastrarNovoClienteRapido(telefone);
+            }
+            return null;
+        }
+    }
+
+    private Cliente cadastrarNovoClienteRapido(String telefone) {
+        try {
+            System.out.print("Nome do cliente: ");
+            String nome = scanner.nextLine();
+            
+            System.out.println("\n=== ENDEREÇO ===");
+            System.out.print("Rua: ");
+            String rua = scanner.nextLine();
+            System.out.print("Número: ");
+            String numero = scanner.nextLine();
+            System.out.print("Bairro: ");
+            String bairro = scanner.nextLine();
+            System.out.print("Cidade: ");
+            String cidade = scanner.nextLine();
+            System.out.print("CEP: ");
+            String cep = scanner.nextLine();
+            
+            Endereco endereco = new Endereco(rua, numero, bairro, cidade, cep);
+            Cliente cliente = new Cliente(0, nome, telefone, endereco);
+            return clienteService.criarCliente(cliente);
+        } catch (Exception e) {
+            System.out.println("Erro ao cadastrar cliente: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private Endereco obterEnderecoEntrega(Cliente cliente) {
+        System.out.println("\nEndereço de entrega:");
+        System.out.println("1. Usar endereço do cliente");
+        System.out.println("2. Informar outro endereço");
+        System.out.print("Escolha: ");
+        int opcao = lerOpcao();
+        
+        if (opcao == 1) {
+            return cliente.getEndereco();
+        } else {
+            System.out.println("=== NOVO ENDEREÇO DE ENTREGA ===");
+            System.out.print("Rua: ");
+            String rua = scanner.nextLine();
+            System.out.print("Número: ");
+            String numero = scanner.nextLine();
+            System.out.print("Bairro: ");
+            String bairro = scanner.nextLine();
+            System.out.print("Cidade: ");
+            String cidade = scanner.nextLine();
+            System.out.print("CEP: ");
+            String cep = scanner.nextLine();
+            
+            return new Endereco(rua, numero, bairro, cidade, cep);
+        }
+    }
+
+    private List<ItemPedido> montarItensPedido() {
+        List<ItemPedido> itens = new ArrayList<>();
+        
+        while (true) {
+            System.out.println("\n=== ADICIONAR ITEM ===");
+            System.out.println("1. Adicionar Pizza");
+            System.out.println("2. Adicionar Bebida");
+            System.out.println("3. Ver itens do pedido");
+            System.out.println("0. Finalizar pedido");
+            System.out.print("Escolha: ");
+            
+            int opcao = lerOpcao();
+            
+            switch (opcao) {
+                case 1 -> adicionarPizza(itens);
+                case 2 -> adicionarBebida(itens);
+                case 3 -> mostrarItensPedido(itens);
+                case 0 -> { return itens; }
+                default -> System.out.println("Opção inválida!");
+            }
+        }
+    }
+
+    private void adicionarPizza(List<ItemPedido> itens) {
+        System.out.println("\n=== PIZZAS DISPONÍVEIS ===");
+        List<Pizza> pizzas = cardapioService.listarTodasPizzas();
+        
+        if (pizzas.isEmpty()) {
+            System.out.println("Nenhuma pizza cadastrada no cardápio.");
+            return;
+        }
+        
+        // Mostrar pizzas com todos os preços
+        for (int i = 0; i < pizzas.size(); i++) {
+            Pizza pizza = pizzas.get(i);
+            System.out.printf("%d. %s%n", (i + 1), pizza.getNome());
+            System.out.printf("   P: R$ %.2f | M: R$ %.2f | G: R$ %.2f%n",
+                pizza.getPrecoBase() * Tamanho.PEQUENA.getMultiplicador(),
+                pizza.getPrecoBase() * Tamanho.MEDIA.getMultiplicador(),
+                pizza.getPrecoBase() * Tamanho.GRANDE.getMultiplicador());
+            if (!pizza.getIngredientes().isEmpty()) {
+                System.out.printf("   Ingredientes: %s%n", 
+                    pizza.getIngredientes().stream().map(Ingrediente::getNome).reduce((a, b) -> a + ", " + b).orElse(""));
+            }
+            System.out.println();
+        }
+        
+        System.out.print("Escolha a pizza: ");
+        int escolha = lerOpcao();
+        
+        if (escolha < 1 || escolha > pizzas.size()) {
+            System.out.println("Opção inválida!");
+            return;
+        }
+        
+        Pizza pizzaBase = pizzas.get(escolha - 1);
+        
+        // Escolher tamanho
+        System.out.println("\nEscolha o tamanho:");
+        System.out.println("P - Pequena (1x do preço base)");
+        System.out.println("M - Média (1.5x do preço base)");
+        System.out.println("G - Grande (2x do preço base)");
+        System.out.print("Digite P, M ou G: ");
+        String tamanhoEscolhido = scanner.nextLine().trim().toUpperCase();
+        
+        Tamanho tamanho = Tamanho.porSigla(tamanhoEscolhido);
+        if (tamanho == null) {
+            System.out.println("Tamanho inválido! Use P, M ou G.");
+            return;
+        }
+        
+        // Criar uma nova pizza com o tamanho escolhido
+        Pizza pizzaComTamanho = new Pizza(
+            pizzaBase.getId(),
+            pizzaBase.getNome(),
+            pizzaBase.getDescricao(),
+            pizzaBase.getPrecoBase(),
+            tamanho,
+            pizzaBase.getIngredientes()
+        );
+        
+        System.out.printf("Pizza escolhida: %s (%s) - R$ %.2f%n", 
+            pizzaComTamanho.getNome(), tamanho.getSigla(), pizzaComTamanho.calcularPreco());
+        
+        System.out.print("Quantidade: ");
+        int quantidade = lerOpcao();
+        
+        if (quantidade <= 0) {
+            System.out.println("Quantidade inválida!");
+            return;
+        }
+        
+        ItemPedido item = new ItemPedido(pizzaComTamanho, quantidade);
+        itens.add(item);
+        
+        System.out.printf("✓ %dx %s (%s) adicionada ao pedido!%n", 
+            quantidade, pizzaComTamanho.getNome(), tamanho.getSigla());
+    }
+
+    private void adicionarBebida(List<ItemPedido> itens) {
+        System.out.println("\n=== BEBIDAS DISPONÍVEIS ===");
+        List<Bebida> bebidas = cardapioService.listarTodasBebidas();
+        
+        if (bebidas.isEmpty()) {
+            System.out.println("Nenhuma bebida cadastrada no cardápio.");
+            return;
+        }
+        
+        for (int i = 0; i < bebidas.size(); i++) {
+            Bebida bebida = bebidas.get(i);
+            System.out.printf("%d. %s (%dml) - R$ %.2f%n", 
+                (i + 1), bebida.getNome(), bebida.getVolumeEmML(), bebida.calcularPreco());
+        }
+        
+        System.out.print("Escolha a bebida: ");
+        int escolha = lerOpcao();
+        
+        if (escolha < 1 || escolha > bebidas.size()) {
+            System.out.println("Opção inválida!");
+            return;
+        }
+        
+        Bebida bebidaEscolhida = bebidas.get(escolha - 1);
+        
+        System.out.print("Quantidade: ");
+        int quantidade = lerOpcao();
+        
+        if (quantidade <= 0) {
+            System.out.println("Quantidade inválida!");
+            return;
+        }
+        
+        ItemPedido item = new ItemPedido(bebidaEscolhida, quantidade);
+        itens.add(item);
+        
+        System.out.printf("✓ %dx %s adicionada ao pedido!%n", quantidade, bebidaEscolhida.getNome());
+    }
+
+    private void mostrarItensPedido(List<ItemPedido> itens) {
+        if (itens.isEmpty()) {
+            System.out.println("\nNenhum item no pedido ainda.");
+            return;
+        }
+        
+        System.out.println("\n=== ITENS DO PEDIDO ===");
+        double total = 0;
+        for (int i = 0; i < itens.size(); i++) {
+            ItemPedido item = itens.get(i);
+            double subtotal = item.calcularSubtotal();
+            total += subtotal;
+            
+            String nomeItem = item.getItem().getNome();
+            if (item.getItem() instanceof Pizza pizza) {
+                nomeItem += " (" + pizza.getTamanho().getSigla() + ")";
+            }
+            
+            System.out.printf("%d. %dx %s - R$ %.2f%n", 
+                (i + 1), item.getQuantidade(), nomeItem, subtotal);
+        }
+        System.out.printf("\nTotal atual: R$ %.2f%n", total);
+    }
+
+    private void mostrarResumoPedido(Pedido pedido, Cliente cliente, int tipoPedido, Endereco enderecoEntrega) {
+        System.out.println("\n=== RESUMO DO PEDIDO ===");
+        System.out.println("Pedido ID: " + pedido.getId());
+        System.out.println("Cliente: " + cliente.getNome());
+        System.out.println("Telefone: " + cliente.getTelefone());
+        System.out.println("Tipo: " + (tipoPedido == 1 ? "Balcão" : "Delivery"));
+        
+        if (enderecoEntrega != null) {
+            System.out.println("Endereço de entrega: " + enderecoEntrega);
+        }
+        
+        System.out.println("\nItens:");
+        for (ItemPedido item : pedido.getItensDoPedido()) {
+            String nomeItem = item.getItem().getNome();
+            if (item.getItem() instanceof Pizza pizza) {
+                nomeItem += " (" + pizza.getTamanho().getSigla() + ")";
+            }
+            System.out.printf("- %dx %s - R$ %.2f%n", 
+                item.getQuantidade(), nomeItem, item.calcularSubtotal());
+        }
+        
+        System.out.printf("\nValor total: R$ %.2f%n", pedido.getValorTotal());
+        System.out.println("Status: " + pedido.getStatus());
+        System.out.println("Data/Hora: " + pedido.getDataHora().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+        
+        System.out.println("\n✓ Pedido criado com sucesso!");
     }
 
     private int lerOpcao() {
