@@ -85,7 +85,7 @@ src/main/java/com/pizzaria/
 
 ## Requisitos Técnicos
 
-- Java 17 ou superior
+- Java 17 ou superior (SÓ TESTEI COM O 17, ABAIXO DISSO QUASE CERTEZA QUE NÃO FUNCIONA POR FAVOR SE ATENTAR A ISSO!!!)
 - Maven 3.6+ (para gerenciamento de dependências)
 
 ## Dependências
