@@ -17,7 +17,7 @@ classDiagram
         +equals(Object) boolean
         +hashCode() int
     }
-    
+
     %% Enums
     class StatusPedido {
         <<enumeration>>
@@ -27,7 +27,7 @@ classDiagram
         CONCLUIDO
         CANCELADO
     }
-    
+
     class Tamanho {
         <<enumeration>>
         PEQUENA("Pequena", "P", 1.0)
@@ -42,7 +42,7 @@ classDiagram
         +porSigla(String) Tamanho
         +toString() String
     }
-    
+
     %% Classes de Modelo
     class Cliente {
         -int id
@@ -68,7 +68,7 @@ classDiagram
         +equals(Object) boolean
         +hashCode() int
     }
-    
+
     class Endereco {
         -String logradouro
         -String numero
@@ -89,7 +89,7 @@ classDiagram
         +setCep(String) void
         +toString() String
     }
-    
+
     class Pizza {
         -double precoBase
         -Tamanho tamanho
@@ -109,7 +109,7 @@ classDiagram
         +contemIngrediente(Ingrediente) boolean
         +toString() String
     }
-    
+
     class Bebida {
         -double precoFixo
         -int volumeEmML
@@ -122,7 +122,7 @@ classDiagram
         +calcularPreco() double
         +toString() String
     }
-    
+
     class Ingrediente {
         -int id
         -String nome
@@ -142,7 +142,7 @@ classDiagram
         +equals(Object) boolean
         +hashCode() int
     }
-    
+
     class Pedido {
         -int id
         -int clienteId
@@ -181,7 +181,7 @@ classDiagram
         +getQuantidadeTotalItens() int
         +toString() String
     }
-    
+
     class ItemPedido {
         -ItemCardapio item
         -int quantidade
@@ -197,7 +197,7 @@ classDiagram
         +calcularSubtotal() double
         +toString() String
     }
-    
+
     %% Classes de Serviço
     class ClienteService {
         -String CLIENTES_FILE
@@ -217,7 +217,7 @@ classDiagram
         -carregarDados() void
         -salvarDados() void
     }
-    
+
     class IngredienteService {
         -String INGREDIENTES_FILE
         -List~Ingrediente~ ingredientes
@@ -237,7 +237,7 @@ classDiagram
         -carregarDados() void
         -salvarDados() void
     }
-    
+
     class CardapioService {
         -String PIZZAS_FILE
         -String BEBIDAS_FILE
@@ -267,7 +267,7 @@ classDiagram
         -salvarPizzas() void
         -salvarBebidas() void
     }
-    
+
     class PedidoService {
         -String PEDIDOS_FILE
         -List~Pedido~ pedidos
@@ -296,23 +296,23 @@ classDiagram
         -carregarDados() void
         -salvarDados() void
     }
-    
+
     %% Classes de Exceção
     class ClienteNaoEncontradoException {
         +ClienteNaoEncontradoException(int)
         +ClienteNaoEncontradoException(String)
     }
-    
+
     class EstoqueInsuficienteException {
         +EstoqueInsuficienteException(String, int, int)
     }
-    
+
     class PedidoInvalidoException {
         +PedidoInvalidoException(int)
         +PedidoInvalidoException(int, StatusPedido, String)
         +PedidoInvalidoException(String)
     }
-    
+
     %% Classes Utilitárias
     class JsonPersistence {
         <<utility>>
@@ -323,17 +323,17 @@ classDiagram
         +fileExists(String) boolean
         +deleteFile(String) boolean
     }
-    
+
     class LocalDateTimeAdapter {
         +serialize(LocalDateTime, Type, JsonSerializationContext) JsonElement
         +deserialize(JsonElement, Type, JsonDeserializationContext) LocalDateTime
     }
-    
+
     class ItemCardapioAdapter {
         +serialize(ItemCardapio, Type, JsonSerializationContext) JsonElement
         +deserialize(JsonElement, Type, JsonDeserializationContext) ItemCardapio
     }
-    
+
     class SistemaPizzaria {
         -ClienteService clienteService
         -IngredienteService ingredienteService
@@ -361,27 +361,25 @@ classDiagram
         -demonstrarCasoDeUso() void
         -lerOpcao() int
     }
-    
+
+    %% --- RELACIONAMENTOS CORRIGIDOS ---
+
     %% Relacionamentos de Herança
-    Pizza --|> ItemCardapio : extends
-    Bebida --|> ItemCardapio : extends
-    
-    %% Relacionamentos de Composição (1:1)
-    Cliente ||--|| Endereco : contains
-    Pedido ||--o| Endereco : delivery address
-    
-    %% Relacionamentos de Agregação (1:n)
-    Cliente ||--o{ Pedido : places
-    Pedido ||--o{ ItemPedido : contains
-    
-    %% Relacionamentos de Associação (n:m)
-    Pizza }o--o{ Ingrediente : uses
-    ItemPedido }o--|| ItemCardapio : references
-    
-    %% Relacionamentos com Enums
-    Pedido }o--|| StatusPedido : has
-    Pizza }o--|| Tamanho : has
-    
+    Pizza --|> ItemCardapio
+    Bebida --|> ItemCardapio
+
+    %% Relacionamentos de Composição e Agregação
+    Cliente "1" *-- "1" Endereco : contains
+    Pedido "1" o-- "0..1" Endereco : delivery address
+    Cliente "1" o-- "*" Pedido : places
+    Pedido "1" o-- "*" ItemPedido : contains
+    Pizza "*" o-- "*" Ingrediente : uses
+
+    %% Relacionamentos de Associação
+    ItemPedido "*" -- "1" ItemCardapio : references
+    Pedido "*" -- "1" StatusPedido : has
+    Pizza "*" -- "1" Tamanho : has
+
     %% Relacionamentos de Dependência (Services)
     ClienteService ..> Cliente : manages
     ClienteService ..> ClienteNaoEncontradoException : throws
@@ -392,16 +390,16 @@ classDiagram
     PedidoService ..> Pedido : manages
     PedidoService ..> PedidoInvalidoException : throws
     PedidoService ..> EstoqueInsuficienteException : throws
-    PedidoService --> ClienteService : uses
-    PedidoService --> IngredienteService : uses
-    PedidoService --> CardapioService : uses
-    
+    PedidoService ..> ClienteService : uses
+    PedidoService ..> IngredienteService : uses
+    PedidoService ..> CardapioService : uses
+
     %% Sistema Principal
-    SistemaPizzaria --> ClienteService : uses
-    SistemaPizzaria --> IngredienteService : uses
-    SistemaPizzaria --> CardapioService : uses
-    SistemaPizzaria --> PedidoService : uses
-    
+    SistemaPizzaria -- ClienteService : uses
+    SistemaPizzaria -- IngredienteService : uses
+    SistemaPizzaria -- CardapioService : uses
+    SistemaPizzaria -- PedidoService : uses
+
     %% Utilitários
     ClienteService ..> JsonPersistence : uses
     IngredienteService ..> JsonPersistence : uses
@@ -409,4 +407,3 @@ classDiagram
     PedidoService ..> JsonPersistence : uses
     JsonPersistence ..> LocalDateTimeAdapter : uses
     JsonPersistence ..> ItemCardapioAdapter : uses
-```
